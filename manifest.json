@@ -1,0 +1,20 @@
+{
+  "name": "Tab Search",
+  "version": "1.0",
+  "manifest_version": 2,
+  "description": "Searches for specific tabs across Chrome windows",
+  "background": {
+    "persistent": false,
+    "scripts": ["bg.js"]
+  },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "css": ["tabSearch.css"],
+    "js": ["tabSearch.js"]
+  }],
+  "permissions": [
+    "tabs"
+  ],
+  "browser_action": {
+  }
+}
