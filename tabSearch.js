@@ -1,164 +1,93 @@
 
-'use strict';
-
 var TabSearch = function () {
-	this.KEYBOARD_TIMEOUT = 500;
-    this.CHARACTERS_BEFORE_SEARCHING = 3;
-	this.CHARACTER_COMBINATIONS = [[17,86],[91,86]];
-	this.init();
+    this.init();
 }
 
 TabSearch.prototype = {
 
-	searchEl: 	'<div id="ts-app" class="ts-input-search-container">' +
-					'<input tabindex="1" class="ts-tab-search-input" type="text" placeholder="Search tabs, bookmarks & chrome links..."/>' +
-					'<div class="ts-results-container"></div>' +
-				'</div>',
+    KEYBOARD_TIMEOUT: 500,
 
-	resultEl:   '<div class="ts-result-row">' +
+    CHARACTERS_BEFORE_SEARCHING: 3,
+
+    searchEl:   '<div id="ts-app" class="ts-input-search-container">' +
+                    '<input tabindex="1" class="ts-tab-search-input" type="text" placeholder="Search tabs, bookmarks & chrome links..."/>' +
+                    '<div class="ts-results-container"></div>' +
+                '</div>',
+
+    resultEl:   '<div class="ts-result-row">' +
                     '<div class="ts-icon"></div>' +
-					'<div class="ts-title"></div>' +
-					'<div class="ts-url"></div>' +
+                    '<div class="ts-title"></div>' +
+                    '<div class="ts-url"></div>' +
                     '<div class="ts-action ts-button"></div>' +
-				'</div>',
+                '</div>',
 
-	init: function () {
-		this.setBindings();
-		this.previousSearchValue = '';
-	},
+    // Initialization
 
-	setBindings: function () {
-		this.onWindowKeydown = this.bind(this.onWindowKeydown, this);
-		this.onSearchKeyup = this.bind(this.onSearchKeyup, this);
-		this.onResultClick = this.bind(this.onResultClick, this);
-	},
+    init: function () {
+        this.setBindings();
+        this.previousSearchValue = '';
+    },
 
-	onWindowKeydown: function (keyCode) {
-		var that = this;
-		if(this.isSearchOpen){
-			if(keyCode == 27) {
-				this.destroy();
-            }
-		}
-	},
+    setBindings: function () {
+        this.onWindowKeydown = this.bind(this.onWindowKeydown, this);
+        this.onSearchKeyup = this.bind(this.onSearchKeyup, this);
+        this.onResultClick = this.bind(this.onResultClick, this);
+    },
 
-	onExtensionResponse: function (resp) {
-        var that = this;
-		this.empty(this.resultsContainer);
-		this.resultsIndex = [];
-		this.activeIndex = 0;
-		if(resp.length){
-			this.removeClass(this.searchInput, 'web-search');
-			for(var i = 0, len = resp.length; i < len; i++){
-				this.resultsIndex.push(resp[i]);
-				var result = this.createHTML(this.resultEl);
-	            result.className += ' ' + resp[i].type;
-				result.children[1].innerHTML = resp[i].titleHTML;
-				result.children[2].innerHTML = resp[i].urlHTML;
+    // Methods
 
-				if(resp[i].type == 'tab'){
-					result.children[3].innerText = "close";
-				} else if (resp[i].type == 'bookmark'){
-					result.children[3].innerText = "delete";
-				}
-
-	            var bindEvents = function(tab, el) {
-	                result.children[3].addEventListener('click', function(){
-	                    that.onActionClick(tab);
-	                });
-	                result.children[1].addEventListener('click', function(){
-	                    that.onResultClick(tab);
-	                });
-	                result.children[2].addEventListener('click', function(){
-	                    that.onResultClick(tab);
-	                });
-	                tab.destroyEl = function () {
-	                    el.remove();
-	                }
-	            }(resp[i], result)
-
-				this.resultsContainer.appendChild(result);
-			}
-		} else {
-			this.addClass(this.searchInput, 'web-search');
-		}
-		this.placeActiveClassName();
-	},
-
-    onActionClick: function (object) {
-        switch(object.type){
-            case 'tab':
-                this.closeTab(object);
-                break;
-            case 'bookmark':
-                this.deleteBookmark(object);
-                break;
+    moveUp: function () {
+        if(this.activeIndex > 0) {
+            this.activeIndex--;
+            this.placeActiveClassName();
         }
     },
 
-    onCloseClick: function (tab) {
-        this.closeTab(tab);
+    moveDown: function () {
+        if(this.activeIndex < this.resultsContainer.children.length - 1){
+            this.activeIndex++;
+            this.placeActiveClassName();
+        }
     },
 
-	onResultClick: function (tab) {
-        this.selectedAction(tab);
-	},
-
-	onEnter: function (evt) {
-        this.selectedAction(this.resultsIndex[this.activeIndex]);
-	},
-
-	moveUp: function () {
-		if(this.activeIndex > 0) {
-			this.activeIndex--;
-			this.placeActiveClassName();
-		}
-	},
-
-	moveDown: function () {
-        if(this.activeIndex < this.resultsContainer.children.length - 1){
-			this.activeIndex++;
-			this.placeActiveClassName();
-		}
-	},
-
-	placeActiveClassName: function () {
-
+    placeActiveClassName: function () {
         var activeElements = this.appEl.getElementsByClassName('active');
 
-		for(var i = 0, len = activeElements.length; i < len; i++){
-			this.removeClass(activeElements[i], 'active');
-		}
+        for(var i = 0, len = activeElements.length; i < len; i++){
+            this.removeClass(activeElements[i], 'active');
+        }
 
-		this.addClass(this.resultsContainer.children[this.activeIndex], 'active');
+        this.addClass(this.resultsContainer.children[this.activeIndex], 'active');
 
-	},
-
-    selectedAction: function (object) {
-    	if(object){
-	        switch(object.type){
-	            case 'tab':
-	                this.focusTab(object);
-	                break;
-	            case 'link':
-	                this.openTab(object);
-	                break;
-	            case 'bookmark':
-	                this.openTab(object);
-	                break;
-	        }
-	    } else {
-	    	this.openTab({url:'https://www.google.com/search?q=' + this.searchInput.value.split(' ').join('+')});
-	    }
     },
 
-	focusTab: function (tab) {
-		chrome.runtime.sendMessage({
-			type: 'focus',
-			tab: tab
-		});
+    selectedAction: function (object) {
+        if(object){
+            switch(object.type){
+                case 'tab':
+                    this.focusTab(object);
+                    break;
+                case 'link':
+                    this.openTab(object);
+                    break;
+                case 'bookmark':
+                    this.openTab(object);
+                    break;
+            }
+        } else {
+            this.openTab({
+                url:'https://www.google.com/search?q=' + this.searchInput.value.split(' ').join('+')
+            });
+        }
+    },
+
+    focusTab: function (tab) {
+        chrome.runtime.sendMessage({
+            type: 'focus',
+            tab: tab
+        });
         this.destroy();
-	},
+    },
 
     closeTab: function (tab) {
         chrome.runtime.sendMessage({
@@ -184,8 +113,91 @@ TabSearch.prototype = {
         bookmark.destroyEl();
     },
 
-	onSearchKeyup: function (evt) {
-		var that = this;
+    openSearch: function () {
+        if(this.isSearchOpen){
+            return;
+        }
+        this.isSearchOpen = true;
+        this.appEl = this.createHTML(this.searchEl);
+        document.body.insertAdjacentElement('afterbegin', this.appEl);
+        this.searchInput = this.appEl.children[0];
+        this.resultsContainer = this.appEl.children[1];
+        this.searchInput.addEventListener('keyup', this.onSearchKeyup);
+        this.searchInput.focus();
+    },
+
+    destroy: function () {
+        this.searchInput.removeEventListener('keyup');
+        this.appEl.remove();
+        this.isSearchOpen = false;
+    },
+
+    // Events
+
+    onActionClick: function (object) {
+        switch(object.type){
+            case 'tab':
+                this.closeTab(object);
+                break;
+            case 'bookmark':
+                this.deleteBookmark(object);
+                break;
+        }
+    },
+
+    onEnter: function (evt) {
+        this.selectedAction(this.resultsIndex[this.activeIndex]);
+    },
+
+    onExtensionResponse: function (resp) {
+        var that = this;
+        this.empty(this.resultsContainer);
+        this.resultsIndex = [];
+        this.activeIndex = 0;
+        if(resp.length){
+            this.removeClass(this.searchInput, 'web-search');
+            for(var i = 0, len = resp.length; i < len; i++){
+                this.resultsIndex.push(resp[i]);
+                var result = this.createHTML(this.resultEl);
+                result.className += ' ' + resp[i].type;
+                result.children[1].innerHTML = resp[i].titleHTML;
+                result.children[2].innerHTML = resp[i].urlHTML;
+
+                if(resp[i].type == 'tab'){
+                    result.children[3].innerText = "close";
+                } else if (resp[i].type == 'bookmark'){
+                    result.children[3].innerText = "delete";
+                }
+
+                var bindEvents = function(tab, el) {
+                    result.children[3].addEventListener('click', function(){
+                        that.onActionClick(tab);
+                    });
+                    result.children[1].addEventListener('click', function(){
+                        that.onResultClick(tab);
+                    });
+                    result.children[2].addEventListener('click', function(){
+                        that.onResultClick(tab);
+                    });
+                    tab.destroyEl = function () {
+                        el.remove();
+                    }
+                }(resp[i], result)
+
+                this.resultsContainer.appendChild(result);
+            }
+        } else {
+            this.addClass(this.searchInput, 'web-search');
+        }
+        this.placeActiveClassName();
+    },
+
+    onResultClick: function (tab) {
+        this.selectedAction(tab);
+    },
+
+    onSearchKeyup: function (evt) {
+        var that = this;
 
         switch(evt.keyCode){
             case 38:
@@ -196,13 +208,13 @@ TabSearch.prototype = {
                 this.onEnter(); return;
         }
 
-		if(this.searchInput.value == ''){
-			this.empty(this.resultsContainer);
-			this.removeClass(this.searchInput, 'web-search');
-		} else {
-			if(this.previousSearchValue == this.searchInput.value){
-				return;
-			} else {
+        if(this.searchInput.value == ''){
+            this.empty(this.resultsContainer);
+            this.removeClass(this.searchInput, 'web-search');
+        } else {
+            if(this.previousSearchValue == this.searchInput.value){
+                return;
+            } else {
                 this.previousSearchValue = this.searchInput.value;
                 if(this.searchInput.value.length >= this.CHARACTERS_BEFORE_SEARCHING){
                     this.previousSearchValue = this.searchInput.value;
@@ -213,72 +225,60 @@ TabSearch.prototype = {
                         that.onExtensionResponse(resp);
                     });
                 }
-			}
-	    }
-	},
+            }
+        }
+    },
 
-	destroy: function () {
-		this.searchInput.removeEventListener('keyup');
-		this.appEl.remove();
-		this.isSearchOpen = false;
-	},
+    onWindowKeydown: function (keyCode) {
+        var that = this;
+        if(this.isSearchOpen){
+            if(keyCode == 27) {
+                this.destroy();
+            }
+        }
+    },
 
-	analyzeStack: function (keyCode) {
-		if(keyCode == 66){
-			this.openSearch();
-		}
-		this.listeningNextStroke = false;
-	},
+    // Utility Methods
 
-	openSearch: function () {
-		this.isSearchOpen = true;
-		this.appEl = this.createHTML(this.searchEl);
-		document.body.insertAdjacentElement('afterbegin', this.appEl);
-		this.searchInput = this.appEl.children[0];
-		this.resultsContainer = this.appEl.children[1];
-		this.searchInput.addEventListener('keyup', this.onSearchKeyup);
-		this.searchInput.focus();
-	},
+    addClass: function (el, className) {
+        var re = RegExp(className, 'gi');
+        if(!re.test(el.className)){
+            el.className += ' ' + className;
+        }
+    },
 
-	createHTML: function (HTML) {
-		var div = document.createElement('div');
-		div.innerHTML = HTML;
-		return div.children[0];
-	},
+    bind: function (fn, ctxt) {
+        return function () {
+            fn.apply(ctxt, arguments);
+        }
+    },
 
-	bind: function (fn, ctxt) {
-		return function () {
-			fn.apply(ctxt, arguments);
-		}
-	},
+    createHTML: function (HTML) {
+        var div = document.createElement('div');
+        div.innerHTML = HTML;
+        return div.children[0];
+    },
 
-	empty: function (el) {
-		while(el.firstChild){
-			el.removeChild(el.firstChild);
-		}
-	},
+    empty: function (el) {
+        while(el.firstChild){
+            el.removeChild(el.firstChild);
+        }
+    },
 
-	removeClass: function (el, className) {
-		var re = RegExp(className, 'gi');
-		if(re.test(el.className)){
-			el.className = el.className.replace(re, '');
-		}
-	},
-
-	addClass: function (el, className) {
-		var re = RegExp(className, 'gi');
-		if(!re.test(el.className)){
-			el.className += ' ' + className;
-		}
-	}
+    removeClass: function (el, className) {
+        var re = RegExp(className, 'gi');
+        if(re.test(el.className)){
+            el.className = el.className.replace(re, '');
+        }
+    }
 }
 
 window.tabSearch = new TabSearch;
 
 window.addEventListener('keydown', function (evt) {
-	tabSearch.onWindowKeydown(evt.keyCode);
+    tabSearch.onWindowKeydown(evt.keyCode);
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	window.tabSearch.openSearch();
+    window.tabSearch.openSearch();
 });
