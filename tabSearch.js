@@ -11,7 +11,7 @@ var TabSearch = function () {
 TabSearch.prototype = {
 
 	searchEl: 	'<div id="ts-app" class="ts-input-search-container">' +
-					'<input tabindex="1" class="ts-tab-search-input" type="text" placeholder="Search tabs, bookmarks & chrome links"/>' +
+					'<input tabindex="1" class="ts-tab-search-input" type="text" placeholder="Search tabs, bookmarks & chrome links..."/>' +
 					'<div class="ts-results-container"></div>' +
 				'</div>',
 
@@ -47,29 +47,34 @@ TabSearch.prototype = {
 		this.empty(this.resultsContainer);
 		this.resultsIndex = [];
 		this.activeIndex = 0;
-		for(var i = 0, len = resp.length; i < len; i++){
-			this.resultsIndex.push(resp[i]);
-			var result = this.createHTML(this.resultEl);
-            result.className += ' ' + resp[i].type;
-			result.children[1].innerHTML = resp[i].titleHTML;
-			result.children[2].innerHTML = resp[i].urlHTML;
+		if(resp.length){
+			this.removeClass(this.searchInput, 'web-search');
+			for(var i = 0, len = resp.length; i < len; i++){
+				this.resultsIndex.push(resp[i]);
+				var result = this.createHTML(this.resultEl);
+	            result.className += ' ' + resp[i].type;
+				result.children[1].innerHTML = resp[i].titleHTML;
+				result.children[2].innerHTML = resp[i].urlHTML;
 
-            var bindEvents = function(tab, el) {
-                result.children[3].addEventListener('click', function(){
-                    that.onActionClick(tab);
-                });
-                result.children[1].addEventListener('click', function(){
-                    that.onResultClick(tab);
-                });
-                result.children[2].addEventListener('click', function(){
-                    that.onResultClick(tab);
-                });
-                tab.destroyEl = function () {
-                    el.remove();
-                }
-            }(resp[i], result)
+	            var bindEvents = function(tab, el) {
+	                result.children[3].addEventListener('click', function(){
+	                    that.onActionClick(tab);
+	                });
+	                result.children[1].addEventListener('click', function(){
+	                    that.onResultClick(tab);
+	                });
+	                result.children[2].addEventListener('click', function(){
+	                    that.onResultClick(tab);
+	                });
+	                tab.destroyEl = function () {
+	                    el.remove();
+	                }
+	            }(resp[i], result)
 
-			this.resultsContainer.appendChild(result);
+				this.resultsContainer.appendChild(result);
+			}
+		} else {
+			this.addClass(this.searchInput, 'web-search');
 		}
 		this.placeActiveClassName();
 	},
@@ -124,17 +129,21 @@ TabSearch.prototype = {
 	},
 
     selectedAction: function (object) {
-        switch(object.type){
-            case 'tab':
-                this.focusTab(object);
-                break;
-            case 'link':
-                this.openTab(object);
-                break;
-            case 'bookmark':
-                this.openTab(object);
-                break;
-        }
+    	if(object){
+	        switch(object.type){
+	            case 'tab':
+	                this.focusTab(object);
+	                break;
+	            case 'link':
+	                this.openTab(object);
+	                break;
+	            case 'bookmark':
+	                this.openTab(object);
+	                break;
+	        }
+	    } else {
+	    	this.openTab({url:'https://www.google.com/search?q=' + this.searchInput.value.split(' ').join('+')});
+	    }
     },
 
 	focusTab: function (tab) {
@@ -183,6 +192,7 @@ TabSearch.prototype = {
 
 		if(this.searchInput.value == ''){
 			this.empty(this.resultsContainer);
+			this.removeClass(this.searchInput, 'web-search');
 		} else {
 			if(this.previousSearchValue == this.searchInput.value){
 				return;

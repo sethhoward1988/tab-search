@@ -111,7 +111,6 @@ function analyzeString (string) {
 		}
 
 	}
-
 	return response;
 }
 
@@ -121,14 +120,12 @@ analyzeWindows();
 chrome.tabs.onCreated.addListener(function (tab) {
 	console.log('Tab Created');
 	addTab(tab);
-})
-;
+});
 
 chrome.tabs.onRemoved.addListener(function (tab) {
 	console.log('Tab Closed');
 	removeTab(tab);
-})
-;
+});
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	console.log("Received Message", request, sender);
