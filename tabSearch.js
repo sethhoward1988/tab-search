@@ -30,7 +30,8 @@ TabSearch.prototype = {
 
     setBindings: function () {
         this.onWindowKeydown = this.bind(this.onWindowKeydown, this);
-        this.onSearchKeyup = this.bind(this.onSearchKeyup, this);
+        this.onSearchInputKeyup = this.bind(this.onSearchInputKeyup, this);
+        this.onSearchInputKeydown = this.bind(this.onSearchInputKeydown, this);
         this.onResultClick = this.bind(this.onResultClick, this);
     },
 
@@ -122,19 +123,18 @@ TabSearch.prototype = {
         document.body.insertAdjacentElement('afterbegin', this.appEl);
         this.searchInput = this.appEl.children[0];
         this.resultsContainer = this.appEl.children[1];
-        this.searchInput.addEventListener('keyup', this.onSearchKeyup);
+        this.searchInput.addEventListener('keydown', this.onSearchInputKeydown);
+        this.searchInput.addEventListener('keyup', this.onSearchInputKeyup);
         this.searchInput.focus();
     },
 
     destroy: function () {
-        this.searchInput.removeEventListener('keyup');
+        this.searchInput.removeEventListener('keydown');
         this.appEl.remove();
         this.isSearchOpen = false;
     },
 
-    // Events
-
-    onActionClick: function (object) {
+    actionEvent: function (object) {
         switch(object.type){
             case 'tab':
                 this.closeTab(object);
@@ -145,11 +145,7 @@ TabSearch.prototype = {
         }
     },
 
-    onEnter: function (evt) {
-        this.selectedAction(this.resultsIndex[this.activeIndex]);
-    },
-
-    onExtensionResponse: function (resp) {
+    buildResults: function (resp) {
         var that = this;
         this.empty(this.resultsContainer);
         this.resultsIndex = [];
@@ -181,6 +177,11 @@ TabSearch.prototype = {
                     });
                     tab.destroyEl = function () {
                         el.remove();
+                        that.resultsIndex.splice(that.activeIndex, 1);
+                        if(that.activeIndex == that.resultsIndex.length){
+                            that.activeIndex--;
+                        }
+                        that.placeActiveClassName();
                     }
                 }(resp[i], result)
 
@@ -192,14 +193,64 @@ TabSearch.prototype = {
         this.placeActiveClassName();
     },
 
+    // Analysis Methods
+
+    analyzeSearchBar: function () {
+        var that = this;
+        if(this.searchInput.value == ''){
+            this.empty(this.resultsContainer);
+            this.removeClass(this.searchInput, 'web-search');
+            return;
+        }
+
+        if(this.previousSearchValue == this.searchInput.value){
+            return;
+        } 
+
+        this.previousSearchValue = this.searchInput.value;
+
+        if(this.searchInput.value.length < this.CHARACTERS_BEFORE_SEARCHING){
+            return;
+        }
+
+        chrome.runtime.sendMessage({
+            type:'search',
+            string: this.searchInput.value
+        }, function (resp) {
+            that.buildResults(resp);
+        });
+    },
+
+
+    // Events
+
+    onActionClick: function (object) {
+        this.actionEvent(object);
+    },
+
+    onEnter: function (evt) {
+        this.selectedAction(this.resultsIndex[this.activeIndex]);
+    },
+
     onResultClick: function (tab) {
         this.selectedAction(tab);
     },
 
-    onSearchKeyup: function (evt) {
-        var that = this;
-
+    onSearchInputKeydown: function (evt) {
         switch(evt.keyCode){
+            case 17: //Ctrl
+                this.isControlDown = true; return;
+            case 91: //Cmd
+                this.isControlDown = true; return;
+            case 8: //Delete
+                if(this.isControlDown){
+                    var object = this.resultsIndex[this.activeIndex];
+                    if(object){
+                        this.actionEvent(object);
+                        evt.preventDefault();
+                    }
+                }
+                return;
             case 38:
                 this.moveUp(); return;
             case 40:
@@ -207,30 +258,17 @@ TabSearch.prototype = {
             case 13:
                 this.onEnter(); return;
         }
+    },
 
-        if(this.searchInput.value == ''){
-            this.empty(this.resultsContainer);
-            this.removeClass(this.searchInput, 'web-search');
-        } else {
-            if(this.previousSearchValue == this.searchInput.value){
-                return;
-            } else {
-                this.previousSearchValue = this.searchInput.value;
-                if(this.searchInput.value.length >= this.CHARACTERS_BEFORE_SEARCHING){
-                    this.previousSearchValue = this.searchInput.value;
-                    chrome.runtime.sendMessage({
-                        type:'search',
-                        string: this.searchInput.value
-                    }, function (resp) {
-                        that.onExtensionResponse(resp);
-                    });
-                }
-            }
+    onSearchInputKeyup: function (evt) {
+        if(evt.keyCode == 17 || evt.keyCode == 91){
+            this.isControlDown = false;
         }
+
+        this.analyzeSearchBar();
     },
 
     onWindowKeydown: function (keyCode) {
-        var that = this;
         if(this.isSearchOpen){
             if(keyCode == 27) {
                 this.destroy();
