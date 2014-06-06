@@ -1,0 +1,68 @@
+<doctype html>
+<html>
+	<head>
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				width: 500px;
+				font: 12px/18px "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
+			}
+
+			body table {
+				font: 12px/18px "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
+			}
+
+			.shortcut {
+				font-weight: bold;
+				font-size: 14px;
+			}
+
+			table img {
+				text-align: center;
+			}
+
+		</style>
+	</head>
+	<body>
+		<h1>Getting Started</h1>
+		<p>Setup a shortcut that will open the command bar. Find the tab search extension and setup any shortcut that you like. Remember that some shortcuts reserved for Chrome (like Ctrl+T, or Ctrl+W) cannot be used. Ctrl+E is a great one since it's current binding isn't very useful (and also bound to Ctrl+K). Configure your shortcut <a href="chrome://extensions/configureCommands" target="_blank">here</a></p>
+		<h1>Options</h1>
+		<p>A search is performed by default after at least 3 characters have been typed. You can change this behavior by selecting the number of characters before performing a query below.
+			<input type="number" min="1" />
+		<h1>Hints</h1>
+		<p>There are some things you should know about to help you out, they are listed below</p>
+		<table>
+			<tr>
+				<td><img src="tab.png" /></td>
+				<td>The tab icon means that this result is from a currently open tab. Press enter when highlighted to focus on that tab</td>
+			</tr>
+			<tr>
+				<td><img src="link.png" /></td>
+				<td>The tab with a plus means it is some sort of link and will open in a new tab if selected</td>
+			</tr>
+			<tr>
+				<td><img src="glass.png" /></td>
+				<td>If no search results are found in open tabs or bookmarks, the magnifying glass appears. Pressing enter will perform a Google search on the current term in a new tab</td>
+			</tr>
+			<tr>
+				<td><img src="option.png" /></td>
+				<td>Some results will have additional options that appear as buttons in the corner. You can click on them to execute the operation</td>
+			</tr>
+			<tr>
+				<td><div class="shortcut">Ctrl+backspace</div></td>
+				<td>Control+Backspace is a shortcut that will perform the additional option without needing to click on it.</td>
+			</tr>
+			<tr>
+				<td><div class="shortcut">Ctrl+Enter<div></td>
+				<td>Control+Enter will perform a Google websearch on the term regardless of whether or not there are results</td>
+			</tr>
+			<tr>
+				<td><div class="shortcut">Esc<div></td>
+				<td>Escape will close the command bar</td>
+			</tr>
+		</table>
+		<h1>Conclusion</h1>
+		<p>Send any questions or comments to smiles.seth@gmail.com. Hope this increases productivity, and don't forget to <a href="https://www.github.com/sethhoward1988/tab-search"></a>star my repo</a> on GitHub!
+	</body>
+</html>

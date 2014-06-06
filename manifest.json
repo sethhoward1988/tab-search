@@ -18,8 +18,13 @@
   ],
   "commands": {
     "toggle-feature": {
-      "suggested_key": { "default": "Ctrl+Shift+Y" },
+      "suggested_key": { "default": "Ctrl+E" },
       "description": "Send a 'toggle-feature' event to the extension"
     }
+  },
+  "browser_action": {
+    "default_title": "Tab Search",
+    "default_icon": "glass.png",
+    "default_popup": "popup.html"
   }
 }

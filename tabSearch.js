@@ -232,6 +232,10 @@ TabSearch.prototype = {
         this.selectedAction(this.resultsIndex[this.activeIndex]);
     },
 
+    onControlEnter: function (evt) {
+        this.selectedAction(null) // Perform a web search
+    },
+
     onResultClick: function (tab) {
         this.selectedAction(tab);
     },
@@ -256,7 +260,12 @@ TabSearch.prototype = {
             case 40:
                 this.moveDown(); return;
             case 13:
-                this.onEnter(); return;
+                if(this.isControlDown){
+                    this.onControlEnter();
+                } else {
+                    this.onEnter();    
+                }
+                return;
         }
     },
 
