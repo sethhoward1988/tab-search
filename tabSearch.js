@@ -19,7 +19,7 @@ TabSearch.prototype = {
                     '<div class="ts-icon"></div>' +
 					'<div class="ts-title"></div>' +
 					'<div class="ts-url"></div>' +
-                    '<div class="ts-action"></div>' +
+                    '<div class="ts-action ts-button"></div>' +
 				'</div>',
 
 	init: function () {
@@ -55,6 +55,12 @@ TabSearch.prototype = {
 	            result.className += ' ' + resp[i].type;
 				result.children[1].innerHTML = resp[i].titleHTML;
 				result.children[2].innerHTML = resp[i].urlHTML;
+
+				if(resp[i].type == 'tab'){
+					result.children[3].innerText = "close";
+				} else if (resp[i].type == 'bookmark'){
+					result.children[3].innerText = "delete";
+				}
 
 	            var bindEvents = function(tab, el) {
 	                result.children[3].addEventListener('click', function(){
