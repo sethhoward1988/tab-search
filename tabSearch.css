@@ -20,7 +20,8 @@
 #ts-app.ts-input-search-container .ts-results-container {
     box-shadow: 0px 0px 5px 0px #222;
     max-height: 400px;
-    overflow: scroll;
+    overflow-horizontal:hidden;
+    overflow-vertical: auto;
 }
 
 #ts-app.ts-input-search-container .ts-results-container .ts-result-row {

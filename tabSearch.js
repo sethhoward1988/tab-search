@@ -39,17 +39,6 @@ TabSearch.prototype = {
 			if(keyCode == 27) {
 				this.destroy();
             }
-		} else {
-			if(keyCode == 17 || keyCode == 91){
-				this.keyCodeStack = [];
-				this.keyCodeStack.push(keyCode);
-				this.listeningNextStroke = true;
-				setTimeout(function () {
-					that.listeningNextStroke = false;
-				}, that.KEYBOARD_TIMEOUT);
-			} else if (this.listeningNextStroke){
-				this.analyzeStack(keyCode);
-			}
 		}
 	},
 
@@ -268,15 +257,12 @@ TabSearch.prototype = {
 	}
 }
 
-
-console.log('Events running');
-
 window.tabSearch = new TabSearch;
 
 window.addEventListener('keydown', function (evt) {
-	// Control 17
-	// Command 91
-	// v 86
 	tabSearch.onWindowKeydown(evt.keyCode);
+});
 
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	window.tabSearch.openSearch();
 });
