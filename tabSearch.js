@@ -11,7 +11,7 @@ var TabSearch = function () {
 TabSearch.prototype = {
 
 	searchEl: 	'<div id="ts-app" class="ts-input-search-container">' +
-					'<input class="ts-tab-search-input" type="text" placeholder="Search tabs, bookmarks & chrome links"/>' +
+					'<input tabindex="1" class="ts-tab-search-input" type="text" placeholder="Search tabs, bookmarks & chrome links"/>' +
 					'<div class="ts-results-container"></div>' +
 				'</div>',
 
@@ -217,7 +217,7 @@ TabSearch.prototype = {
 	openSearch: function () {
 		this.isSearchOpen = true;
 		this.appEl = this.createHTML(this.searchEl);
-		document.body.appendChild(this.appEl);
+		document.body.insertAdjacentElement('afterbegin', this.appEl);
 		this.searchInput = this.appEl.children[0];
 		this.resultsContainer = this.appEl.children[1];
 		this.searchInput.addEventListener('keyup', this.onSearchKeyup);

@@ -155,11 +155,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 
 chrome.commands.onCommand.addListener(function(command) {
-  console.log('onCommand event received for message: ', command);
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, {greeting: "hello"}, function(response) {
-        console.log("Message Sent");
-      });
+    console.log('onCommand event received for message: ', command);
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        focusTab(tabs[0]);
+        chrome.tabs.sendMessage(tabs[0].id, {greeting: "hello"}, function(response) {
+            console.log("Message Sent");
+        });
     });
 });
 
