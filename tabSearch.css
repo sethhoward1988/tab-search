@@ -1,14 +1,14 @@
 
 #ts-app.ts-input-search-container {
 	position: fixed;
-	width: 500px;
-	left: calc(50% - 250px);
-	top: 250px;
+	width: 530px;
+	left: calc(50% - 265px);
+	top: 110px;
 	z-index: 9999999;
 }
 
 #ts-app.ts-input-search-container input.ts-tab-search-input {
-	width: 485px;
+	width: 515px;
 	border: none;
 	height: 45px;
 	font-size: 20px;
@@ -17,10 +17,21 @@
 	box-shadow: 0px 0px 5px 0px #222;
 }
 
+#ts-app.ts-input-search-container .ts-results-container {
+    box-shadow: 0px 0px 5px 0px #222;
+    max-height: 400px;
+    overflow: scroll;
+}
+
 #ts-app.ts-input-search-container .ts-results-container .ts-result-row {
 	width: 510px;
 	background-color: white;
 	padding: 10px;
+    border-bottom: 1px solid #BBB;
+}
+
+#ts-app.ts-input-search-container .ts-results-container .ts-result-row:last-child {
+    border-bottom: none;
 }
 
 #ts-app.ts-input-search-container .ts-results-container .ts-result-row.active {
@@ -28,21 +39,43 @@
 	color: white;
 }
 
+#ts-app.ts-input-search-container .ts-results-container .ts-result-row:hover {
+    background-color: steelblue;
+    color: white;
+    cursor: pointer;
+}
+
+
 #ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-title {
 	font-size: 16px;
-	width: 300px;
+	width: 280px;
 }
 
 #ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-url {
 	font-size: 12px;
-	width: 200px;
+	width: 190px;
+}
+
+#ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-close {
+    font-size: 11px;
+    width: 30px;
+    cursor: pointer;
+}
+
+#ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-close:hover {
+    color: white;
+    background-color: red;
 }
 
 #ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-title,
 #ts-app.ts-input-search-container .ts-results-container .ts-result-row span.ts-span,
-#ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-url {
+#ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-url,
+#ts-app.ts-input-search-container .ts-results-container .ts-result-row .ts-close {
 	display: inline-block;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+
+
+

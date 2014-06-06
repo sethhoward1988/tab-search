@@ -2,21 +2,24 @@
 'use strict';
 
 var TabSearch = function () {
-	this.KEYBOARD_TIMEOUT = 500,
-	this.CHARACTER_COMBINATIONS = [[17,86],[91,86]]
+	this.KEYBOARD_TIMEOUT = 500;
+    this.CHARACTERS_BEFORE_SEARCHING = 3;
+	this.CHARACTER_COMBINATIONS = [[17,86],[91,86]];
 	this.init();
 }
 
 TabSearch.prototype = {
 
 	searchEl: 	'<div id="ts-app" class="ts-input-search-container">' +
-					'<input class="ts-tab-search-input" type="text" placeholder="Search tabs..."/>' +
+					'<input class="ts-tab-search-input" type="text" placeholder="Search tabs, bookmarks & chrome links"/>' +
 					'<div class="ts-results-container"></div>' +
 				'</div>',
 
 	resultEl:   '<div class="ts-result-row">' +
+                    '<div class="ts-icon"></div>' +
 					'<div class="ts-title"></div>' +
 					'<div class="ts-url"></div>' +
+                    '<div class="ts-action"></div>' +
 				'</div>',
 
 	init: function () {
@@ -35,11 +38,7 @@ TabSearch.prototype = {
 		if(this.isSearchOpen){
 			if(keyCode == 27) {
 				this.destroy();
-			} else if (keyCode == 38){
-				this.moveUp();
-			} else if (keyCode == 40){
-				this.moveDown();
-			}
+            }
 		} else {
 			if(keyCode == 17 || keyCode == 91){
 				this.keyCodeStack = [];
@@ -55,81 +54,167 @@ TabSearch.prototype = {
 	},
 
 	onExtensionResponse: function (resp) {
+        var that = this;
 		this.empty(this.resultsContainer);
 		this.resultsIndex = [];
 		this.activeIndex = 0;
 		for(var i = 0, len = resp.length; i < len; i++){
 			this.resultsIndex.push(resp[i]);
 			var result = this.createHTML(this.resultEl);
-			result.children[0].innerHTML = resp[i].titleHTML;
-			result.children[1].innerHTML = resp[i].urlHTML;
-			result.indexInResultsIndex = i;
-			result.addEventListener('click', this.onResultClick);
+            result.className += ' ' + resp[i].type;
+			result.children[1].innerHTML = resp[i].titleHTML;
+			result.children[2].innerHTML = resp[i].urlHTML;
+
+            var bindEvents = function(tab, el) {
+                result.children[3].addEventListener('click', function(){
+                    that.onActionClick(tab);
+                });
+                result.children[1].addEventListener('click', function(){
+                    that.onResultClick(tab);
+                });
+                result.children[2].addEventListener('click', function(){
+                    that.onResultClick(tab);
+                });
+                tab.destroyEl = function () {
+                    el.remove();
+                }
+            }(resp[i], result)
+
 			this.resultsContainer.appendChild(result);
-			console.log(resp[i]);
 		}
-		this.moveActive();
+		this.placeActiveClassName();
 	},
 
-	onResultClick: function (evt) {
-		this.focus(this.resultsIndex[evt.currentTarget.indexInResultsIndex]);
+    onActionClick: function (object) {
+        switch(object.type){
+            case 'tab':
+                this.closeTab(object);
+                break;
+            case 'bookmark':
+                this.deleteBookmark(object);
+                break;
+        }
+    },
+
+    onCloseClick: function (tab) {
+        this.closeTab(tab);
+    },
+
+	onResultClick: function (tab) {
+        this.selectedAction(tab);
 	},
 
 	onEnter: function (evt) {
-		this.focus(this.resultsIndex[this.activeIndex]);
+        this.selectedAction(this.resultsIndex[this.activeIndex]);
 	},
 
 	moveUp: function () {
-		if(this.resultsContainer.children.length - 1 < this.activeIndex){
-			this.activeIndex++;
-			this.moveActive();
+		if(this.activeIndex > 0) {
+			this.activeIndex--;
+			this.placeActiveClassName();
 		}
 	},
 
 	moveDown: function () {
-		if(this.activeIndex > 0) {
-			this.activeIndex--;
-			this.moveActive();
+        if(this.activeIndex < this.resultsContainer.children.length - 1){
+			this.activeIndex++;
+			this.placeActiveClassName();
 		}
 	},
 
-	moveActive: function () {
-		for(var i = 0, len = this.resultsContainer.children.length; i < len; i++){
-			this.removeClass(this.resultsContainer.children[i], 'active');
+	placeActiveClassName: function () {
+
+        var activeElements = this.appEl.getElementsByClassName('active');
+
+		for(var i = 0, len = activeElements.length; i < len; i++){
+			this.removeClass(activeElements[i], 'active');
 		}
+
 		this.addClass(this.resultsContainer.children[this.activeIndex], 'active');
+
 	},
 
-	focus: function (tab) {
+    selectedAction: function (object) {
+        switch(object.type){
+            case 'tab':
+                this.focusTab(object);
+                break;
+            case 'link':
+                this.openTab(object);
+                break;
+            case 'bookmark':
+                this.openTab(object);
+                break;
+        }
+    },
+
+	focusTab: function (tab) {
 		chrome.runtime.sendMessage({
-			focus: true,
+			type: 'focus',
 			tab: tab
 		});
-		this.destroy();
+        this.destroy();
 	},
 
-	onSearchKeyup: function () {
+    closeTab: function (tab) {
+        chrome.runtime.sendMessage({
+            type: 'close',
+            tab: tab
+        });
+        tab.destroyEl();
+    },
+
+    openTab: function (link) {
+        chrome.runtime.sendMessage({
+            type: 'open',
+            url: link.url
+        });
+        this.destroy();
+    },
+
+    deleteBookmark: function (bookmark) {
+        chrome.runtime.sendMessage({
+            type: 'delete',
+            bookmark: bookmark
+        });
+        bookmark.destroyEl();
+    },
+
+	onSearchKeyup: function (evt) {
 		var that = this;
-		
+
+        switch(evt.keyCode){
+            case 38:
+                this.moveUp(); return;
+            case 40:
+                this.moveDown(); return;
+            case 13:
+                this.onEnter(); return;
+        }
+
 		if(this.searchInput.value == ''){
 			this.empty(this.resultsContainer);
 		} else {
 			if(this.previousSearchValue == this.searchInput.value){
 				return;
 			} else {
-				this.previousSearchValue = this.searchInput.value;
-				chrome.runtime.sendMessage({
-					string: this.searchInput.value
-				}, function (resp) {
-					that.onExtensionResponse(resp);
-				});	
+                this.previousSearchValue = this.searchInput.value;
+                if(this.searchInput.value.length >= this.CHARACTERS_BEFORE_SEARCHING){
+                    this.previousSearchValue = this.searchInput.value;
+                    chrome.runtime.sendMessage({
+                        type:'search',
+                        string: this.searchInput.value
+                    }, function (resp) {
+                        that.onExtensionResponse(resp);
+                    });
+                }
 			}
-		}
+	    }
 	},
 
 	destroy: function () {
 		this.searchInput.removeEventListener('keyup');
-		this.searchHTML.remove();
+		this.appEl.remove();
 		this.isSearchOpen = false;
 	},
 
@@ -142,10 +227,10 @@ TabSearch.prototype = {
 
 	openSearch: function () {
 		this.isSearchOpen = true;
-		this.searchHTML = this.createHTML(this.searchEl);
-		document.body.appendChild(this.searchHTML);
-		this.searchInput = this.searchHTML.children[0];
-		this.resultsContainer = this.searchHTML.children[1];
+		this.appEl = this.createHTML(this.searchEl);
+		document.body.appendChild(this.appEl);
+		this.searchInput = this.appEl.children[0];
+		this.resultsContainer = this.appEl.children[1];
 		this.searchInput.addEventListener('keyup', this.onSearchKeyup);
 		this.searchInput.focus();
 	},
@@ -169,9 +254,9 @@ TabSearch.prototype = {
 	},
 
 	removeClass: function (el, className) {
-		var re = RegExp(el, className);
+		var re = RegExp(className, 'gi');
 		if(re.test(el.className)){
-			el.className.replace(re, '');
+			el.className = el.className.replace(re, '');
 		}
 	},
 

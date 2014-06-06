@@ -13,7 +13,8 @@
     "js": ["tabSearch.js"]
   }],
   "permissions": [
-    "tabs"
+    "tabs",
+    "bookmarks"
   ],
   "browser_action": {
   }
