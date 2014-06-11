@@ -57,9 +57,9 @@ TabSearch.prototype = {
         for(var i = 0, len = activeElements.length; i < len; i++){
             this.removeClass(activeElements[i], 'active');
         }
-
-        this.addClass(this.resultsContainer.children[this.activeIndex], 'active');
-
+        if(this.resultsContainer.children.length){
+            this.addClass(this.resultsContainer.children[this.activeIndex], 'active');    
+        }
     },
 
     selectedAction: function (object) {
@@ -189,8 +189,16 @@ TabSearch.prototype = {
             }
         } else {
             this.addClass(this.searchInput, 'web-search');
+            console.log('web searching!');
+            this.getAutocompletions();
         }
         this.placeActiveClassName();
+    },
+
+    getAutocompletions: function () {
+        this.jsonp('http://suggestqueries.google.com/complete/search?client=firefox&q=' + this.searchInput.value, function () {
+            console.log('my callback fired');
+        });
     },
 
     // Analysis Methods
@@ -317,6 +325,36 @@ TabSearch.prototype = {
         if(re.test(el.className)){
             el.className = el.className.replace(re, '');
         }
+    },
+
+    ajax: function (type, url, callback) {
+        var xhr = new XMLHttpRequest();
+        url = (new URL(url)).href;
+        xhr.open(type, url, true);
+        xhr.onreadystatechange = function (resp) {
+            console.log(resp);
+            callback();
+        };
+        xhr.send();
+    },
+
+    jsonp: function (url, callback){
+        var time = new Date;
+        var callbackName = "ts" + (++time).toString();
+        var that = this;
+        var callbackScript = document.createElement
+        window[callbackName] = function () {
+            var script = document.getElementById(callbackName);
+            script.remove();
+            callback()
+            delete window[callbackName];
+        }
+        var script = document.createElement('script');
+        script.id = callbackName;
+        script.src = (new URL(url)).href + '&callback=' + callbackName;
+        var otherScript = document.createElement('script');
+        script.
+        document.body.appendChild(script);
     }
 }
 
